@@ -3,13 +3,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Carregar dados
+# Load data
 btc = pd.read_csv('BTC.csv')
 sol = pd.read_csv('SOL.csv')
 eth = pd.read_csv('ETH.csv')
 usdt = pd.read_csv('USDT.csv')
 
-# Preparar os dados
+# Prepare data
 btc['date'] = pd.to_datetime(btc['date'])
 sol['date'] = pd.to_datetime(sol['date'])
 eth['date'] = pd.to_datetime(eth['date'])
@@ -22,132 +22,132 @@ usdt['coin'] = 'USDT'
 
 df = pd.concat([btc, sol, eth, usdt])
 df.sort_values(by='date', inplace=True)
-df['volatilidade'] = df['high'] - df['low']
+df['volatility'] = df['high'] - df['low']
 
-# Sidebar com seleção de moedas
-moeda = st.sidebar.selectbox('💱 Escolha a Moeda:', ['BTC', 'SOL', 'ETH', 'USDT'])
-dados = df[df['coin'] == moeda].copy()
+# Sidebar coin selector
+coin = st.sidebar.selectbox('💱 Choose a Coin:', ['BTC', 'SOL', 'ETH', 'USDT'])
+data = df[df['coin'] == coin].copy()
 
-# Filtro de ano
-ano_filtro = st.sidebar.selectbox('🔄 Selecione o Ano:', sorted(df['date'].dt.year.unique(), reverse=True))
-dados = dados[dados['date'].dt.year == ano_filtro]
+# Year filter
+selected_year = st.sidebar.selectbox('🔄 Select a Year:', sorted(df['date'].dt.year.unique(), reverse=True))
+data = data[data['date'].dt.year == selected_year]
 
-st.sidebar.markdown(f"**Período:** {dados['date'].min().date()} → {dados['date'].max().date()}")
-st.sidebar.markdown(f"**Total de Registros:** {dados.shape[0]}")
+st.sidebar.markdown(f"**Period:** {data['date'].min().date()} → {data['date'].max().date()}")
+st.sidebar.markdown(f"**Total Records:** {data.shape[0]}")
 
-# Gráfico 1 - Preço de Fechamento
-st.subheader(f'📉 Evolução do Preço de Fechamento - {moeda} ({ano_filtro})')
+# Chart 1 - Closing Price
+st.subheader(f'📉 Closing Price Over Time - {coin} ({selected_year})')
 fig1, ax1 = plt.subplots(figsize=(12, 4))
-sns.lineplot(data=dados, x='date', y='close', ax=ax1)
-ax1.set_ylabel('Preço de Fechamento (USD)')
+sns.lineplot(data=data, x='date', y='close', ax=ax1)
+ax1.set_ylabel('Closing Price (USD)')
 st.pyplot(fig1)
 
 st.markdown("""
-*Este gráfico apresenta a evolução do preço de fechamento da moeda ao longo do tempo. 
-Ele permite observar as tendências de alta ou queda nos preços e identificar períodos de maior volatilidade.*
+*This chart shows how the coin's closing price evolves over time.
+It makes upward and downward price trends visible and helps identify periods of higher volatility.*
 """)
 
-# Gráfico 2 - Volatilidade Diária
-st.subheader(f'⚡ Volatilidade Diária (High - Low) - {moeda} ({ano_filtro})')
+# Chart 2 - Daily Volatility
+st.subheader(f'⚡ Daily Volatility (High - Low) - {coin} ({selected_year})')
 fig2, ax2 = plt.subplots(figsize=(12, 4))
-sns.lineplot(data=dados, x='date', y='volatilidade', color='orange', ax=ax2)
-ax2.set_ylabel('Volatilidade (USD)')
+sns.lineplot(data=data, x='date', y='volatility', color='orange', ax=ax2)
+ax2.set_ylabel('Volatility (USD)')
 st.pyplot(fig2)
 
 st.markdown("""
-*Este gráfico mostra a volatilidade diária, calculada pela diferença entre o preço mais alto e o mais baixo do dia. 
-Alta volatilidade pode indicar grande incerteza ou mudança nas tendências do mercado.*
+*This chart shows daily volatility, calculated as the difference between the day's highest and lowest price.
+High volatility can signal strong uncertainty or a shift in market trends.*
 """)
 
-# Gráfico 3 - Correlação entre Abertura e Fechamento
-st.subheader(f'🔗 Correlação Abertura vs Fechamento - {moeda} ({ano_filtro})')
+# Chart 3 - Open vs Close Correlation
+st.subheader(f'🔗 Open vs Close Correlation - {coin} ({selected_year})')
 fig3, ax3 = plt.subplots(figsize=(6, 4))
-sns.scatterplot(data=dados, x='open', y='close', ax=ax3)
-ax3.set_xlabel('Abertura (USD)')
-ax3.set_ylabel('Fechamento (USD)')
+sns.scatterplot(data=data, x='open', y='close', ax=ax3)
+ax3.set_xlabel('Open (USD)')
+ax3.set_ylabel('Close (USD)')
 st.pyplot(fig3)
 
 st.markdown("""
-*Este gráfico de dispersão nos ajuda a entender como o preço de abertura se relaciona com o preço de fechamento. 
-Uma forte correlação pode indicar que a moeda tem uma tendência de continuar sua trajetória durante o dia.*
+*This scatter plot shows how the opening price relates to the closing price.
+A strong correlation may indicate that the coin tends to keep its direction throughout the day.*
 """)
 
-# Gráfico 4 - Média Móvel de 30 dias
-st.subheader(f'📈 Média Móvel de 30 dias - {moeda} ({ano_filtro})')
-dados['media_movel'] = dados['close'].rolling(window=30).mean()
+# Chart 4 - 30-Day Moving Average
+st.subheader(f'📈 30-Day Moving Average - {coin} ({selected_year})')
+data['moving_avg'] = data['close'].rolling(window=30).mean()
 fig4, ax4 = plt.subplots(figsize=(12, 4))
-sns.lineplot(data=dados, x='date', y='close', label='Fechamento', ax=ax4)
-sns.lineplot(data=dados, x='date', y='media_movel', label='Média Móvel (30d)', ax=ax4)
+sns.lineplot(data=data, x='date', y='close', label='Close', ax=ax4)
+sns.lineplot(data=data, x='date', y='moving_avg', label='Moving Average (30d)', ax=ax4)
 ax4.set_ylabel('USD')
 ax4.legend()
 st.pyplot(fig4)
 
 st.markdown("""
-*A média móvel de 30 dias ajuda a suavizar flutuações diárias, mostrando a tendência subjacente do preço da moeda. 
-Isso é útil para identificar mudanças no padrão de preço mais gradual ao longo do tempo.*
+*The 30-day moving average smooths out daily fluctuations and reveals the underlying price trend.
+It is useful for spotting more gradual changes in the price pattern over time.*
 """)
 
-# Gráfico 5 - Distribuição da Volatilidade
-st.subheader(f'🎻 Distribuição da Volatilidade - {moeda} ({ano_filtro})')
+# Chart 5 - Volatility Distribution
+st.subheader(f'🎻 Volatility Distribution - {coin} ({selected_year})')
 fig5, ax5 = plt.subplots(figsize=(6, 4))
-sns.violinplot(data=dados, x='coin', y='volatilidade', ax=ax5)
-ax5.set_ylabel('Volatilidade')
+sns.violinplot(data=data, x='coin', y='volatility', ax=ax5)
+ax5.set_ylabel('Volatility')
 st.pyplot(fig5)
 
 st.markdown("""
-*O violinplot é útil para comparar a distribuição da volatilidade entre diferentes moedas. Ele também mostra a mediana, 
-os quartis e a forma geral da distribuição dos dados.*
+*The violin plot is useful for comparing the volatility distribution across coins. It also shows the median,
+the quartiles and the overall shape of the distribution.*
 """)
 
-# Gráfico 6 - Boxplot de Preços
-st.subheader(f'📦 Boxplot dos Preços de Fechamento - {moeda} ({ano_filtro})')
+# Chart 6 - Price Boxplot
+st.subheader(f'📦 Closing Price Boxplot - {coin} ({selected_year})')
 fig6, ax6 = plt.subplots(figsize=(6, 4))
-sns.boxplot(data=dados, y='close', ax=ax6)
-ax6.set_ylabel('Fechamento (USD)')
+sns.boxplot(data=data, y='close', ax=ax6)
+ax6.set_ylabel('Close (USD)')
 st.pyplot(fig6)
 
 st.markdown("""
-*O boxplot nos ajuda a visualizar a dispersão dos preços de fechamento e identificar outliers, 
-ou seja, dias em que os preços foram anormalmente altos ou baixos.*
+*The boxplot shows the spread of closing prices and highlights outliers,
+that is, days when prices were unusually high or low.*
 """)
 
-# Gráfico 7 - Histograma + KDE dos preços
-st.subheader(f'📊 Distribuição dos Preços de Fechamento - {moeda} ({ano_filtro})')
+# Chart 7 - Price Histogram + KDE
+st.subheader(f'📊 Closing Price Distribution - {coin} ({selected_year})')
 fig7, ax7 = plt.subplots(figsize=(8, 4))
-sns.histplot(dados['close'], kde=True, bins=50, ax=ax7)
-ax7.set_xlabel('Fechamento (USD)')
+sns.histplot(data['close'], kde=True, bins=50, ax=ax7)
+ax7.set_xlabel('Close (USD)')
 st.pyplot(fig7)
 
 st.markdown("""
-*Este histograma com a linha de densidade nos mostra a distribuição dos preços de fechamento. 
-Pode ser útil para verificar a tendência central e a dispersão dos preços.*
+*This histogram with a density curve shows the distribution of closing prices.
+It helps assess the central tendency and the spread of prices.*
 """)
 
-# Gráfico 8 - Heatmap de Correlação
-st.subheader(f'🧪 Correlação entre Variáveis - {moeda} ({ano_filtro})')
+# Chart 8 - Correlation Heatmap
+st.subheader(f'🧪 Correlation between Variables - {coin} ({selected_year})')
 fig8, ax8 = plt.subplots(figsize=(6, 4))
 sns.heatmap(
-    dados[['open', 'high', 'low', 'close', 'volatilidade']].corr(),
+    data[['open', 'high', 'low', 'close', 'volatility']].corr(),
     annot=True, cmap='coolwarm', ax=ax8, fmt=".2f"
 )
 st.pyplot(fig8)
 
 st.markdown("""
-*Este heatmap mostra a correlação entre as principais variáveis, como o preço de abertura, fechamento e a volatilidade. 
-Uma alta correlação entre duas variáveis indica que elas estão fortemente relacionadas.*
+*This heatmap shows the correlation between the main variables, such as opening price, closing price and volatility.
+A high correlation between two variables means they are strongly related.*
 """)
 
-# Conclusão do Notebook
+# Conclusion
 st.markdown("---")
-st.subheader("🔍 Conclusão")
+st.subheader("🔍 Conclusion")
 st.markdown("""
-A análise exploratória realizada mostrou como as criptomoedas BTC, SOL, ETH e USDT se comportam em termos de preços, volatilidade e outras variáveis importantes ao longo do tempo.
+This exploratory analysis shows how BTC, SOL, ETH and USDT behave over time in terms of price, volatility and other key variables.
 
-Com o uso de gráficos interativos, conseguimos explorar tendências, identificar períodos de alta volatilidade, e observar a relação entre os preços de abertura e fechamento. 
+Interactive charts make it possible to explore trends, identify periods of high volatility and observe the relationship between opening and closing prices.
 
-Através da **média móvel**, conseguimos suavizar os dados e visualizar tendências mais claras, enquanto o **boxplot** e o **violinplot** nos ajudaram a identificar outliers e entender melhor a distribuição dos dados.
+The **moving average** smooths the data and makes trends clearer, while the **boxplot** and **violin plot** help identify outliers and better understand the data distribution.
 
-Esses gráficos proporcionam uma visão clara e útil para investidores e analistas, permitindo tomar decisões mais informadas sobre os ativos.
+Together, these charts give investors and analysts a clear, practical view that supports better-informed decisions about these assets.
 
-Com a **selecção de anos** e a visualização dos dados para diferentes moedas, o aplicativo se torna uma ferramenta valiosa para a análise comparativa de diferentes criptomoedas.
+With **year selection** and per-coin views, the app becomes a useful tool for comparing different cryptocurrencies side by side.
 """)
